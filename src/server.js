@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable global-require */
-
 const express = require('express');
 const cors = require('cors');
 const Youch = require('youch');
