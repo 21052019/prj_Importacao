@@ -1,0 +1,23 @@
+{
+  "name": "prj_importacao",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "author": "William",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.1.0",
+    "dotenv-safe": "^8.1.0",
+    "express": "^4.17.1",
+    "mssql": "^5.1.0",
+    "youch": "^2.0.10"
+  },
+  "devDependencies": {
+    "eslint": "^6.3.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "nodemon": "^1.19.2"
+  }
+}
