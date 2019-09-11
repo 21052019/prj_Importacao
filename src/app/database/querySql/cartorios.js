@@ -1,4 +1,5 @@
-const dataBaseTools = require('../dataBaseTools')
+const dataBaseTools = require('../dataBaseTools');
+
 class cartorios {
 }
-module.exports = cartorios
+module.exports = cartorios;
