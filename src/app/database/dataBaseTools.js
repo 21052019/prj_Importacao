@@ -47,5 +47,39 @@ class DataBase {
         });
     });
   }
+
+  executarProcedure(procedure, inputs = [], outputs = []) {
+    return new Promise((resolve, reject) => {
+      const conn = new sql.ConnectionPool(this.config);
+      conn
+        .connect()
+        .then(() => {
+          const request = new sql.Request(conn);
+
+          for (const { nome, tipo, valor } of inputs) {
+            request.input(nome, tipo, valor);
+          }
+
+          for (const { nome, tipo } of outputs) {
+            request.output(nome, tipo);
+          }
+
+          request
+            .execute(procedure)
+            .then((response) => {
+              sql.close();
+              return resolve(response);
+            })
+            .catch((err) => {
+              sql.close();
+              return reject(err);
+            });
+        })
+        .catch((err) => {
+          conn.close();
+          return reject(err);
+        });
+    });
+  }
 }
 module.exports = new DataBase();

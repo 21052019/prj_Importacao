@@ -17,6 +17,8 @@
     "global-require": "off",
     "no-undef": "off",
     "no-use-before-define": "off",
+    "linebreak-style": "off",
+    "class-methods-use-this": "off",
     "no-unused-vars": "warn"
   }
 }
