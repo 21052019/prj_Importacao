@@ -33,7 +33,7 @@ module.exports = {
 };
 
 const linhaParaObj = async (cartorio) => {
-  const IDvia = await bdSQL.dbbuscaIdVia(cartorio[7]);
+  const IDvia = await bdSQL.dbbuscaIdVia(cartorio[8]);
   const IDcidade = await bdSQL.dbbuscaIdCidade(cartorio[2]);
 
   return ({
@@ -45,31 +45,31 @@ const linhaParaObj = async (cartorio) => {
     razao: cartorio[4],
     cnpj: cartorio[5],
     nomeOficial: cartorio[6],
-    cns: null,
+    cns: cartorio[7],
     ipCartorio: null,
     IDvia,
     observacoes: null,
     horariofunc: null,
-    via: cartorio[7],
-    logradouro: cartorio[8],
-    numero: cartorio[9],
-    complemento: cartorio[10],
-    bairro: cartorio[11],
-    cep: cartorio[12],
-    emailOficial: cartorio[13],
-    dddTelefone: cartorio[14],
-    telefone: cartorio[15],
+    via: cartorio[8],
+    logradouro: cartorio[9],
+    numero: cartorio[10] !== null ? cartorio[10] : 'S/N',
+    complemento: cartorio[11],
+    bairro: cartorio[12],
+    cep: cartorio[13],
+    emailOficial: cartorio[14],
+    dddTelefone: cartorio[15],
+    telefone: cartorio[16],
     dddfax: null,
     fax: null,
     site: null,
-    nrBanco: (cartorio[16] || ''),
-    favorecido: (cartorio[17] || ''),
-    nrAgencia: (cartorio[18] || ''),
-    nrAgenciaDigito: cartorio[18],
-    nrContaCorrente: (cartorio[19] || ''),
-    nrContaCorrenteDigito: null,
-    cobrado: cartorio[20],
-    percentual: cartorio[21],
+    nrBanco: (cartorio[17] || ''),
+    favorecido: (cartorio[18] || ''),
+    nrAgencia: (cartorio[19] || ''),
+    nrAgenciaDigito: cartorio[20] !== null ? cartorio[20] : '',
+    nrContaCorrente: (cartorio[21] || ''),
+    nrContaCorrenteDigito: cartorio[22] !== null ? cartorio[22] : '',
+    cobrado: cartorio[23],
+    percentual: cartorio[24],
     bsrNrBanco: null,
     bsrNraAgencia: null,
     bsrNrContaCorrente: null,
@@ -105,38 +105,112 @@ const linhaParaObj = async (cartorio) => {
 };
 
 const validarObj = (objCartorio) => {
-  if (!objCartorio.estado) return false;
+  if (!objCartorio.estado) {
+    console.log('Estado Invalido');
+    return false;
+  }
   // Adicionar validações quanto aos tipagens de cada coluna correspondente das tabelas.
 
-  if (!objCartorio.comarca) return false;
+  if (!objCartorio.comarca) {
+    console.log('comarca invalido');
+    return false;
+  }
 
-  if (!objCartorio.cidade) return false;
+  if (!objCartorio.cidade) {
+    console.log('cidade invalida');
+    return false;
+  }
 
-  if (!objCartorio.razao) return false;
+  if (!objCartorio.razao) {
+    console.log('razao invalido');
+    return false;
+  }
 
-  if (!objCartorio.cnpj) return false;
+  if (!objCartorio.cnpj) {
+    console.log('cnpj invalido');
+    return false;
+  }
 
-  if (!objCartorio.nomeOficial) return false;
+  if (!objCartorio.nomeOficial) {
+    console.log('NomeOficial invalido');
+    return false;
+  }
 
-  if (!objCartorio.via) return false;
+  if (!objCartorio.cns) {
+    console.log('cns invalido');
+    return false;
+  }
 
-  if (!objCartorio.logradouro) return false;
+  if (!objCartorio.via) {
+    console.log('via invalido');
+    return false;
+  }
 
-  if (!objCartorio.numero) return false;
+  if (!objCartorio.logradouro) {
+    console.log('logradouro invalido');
+    return false;
+  }
 
-  if (!objCartorio.bairro) return false;
+  if (!objCartorio.numero) {
+    console.log('numero invalido');
+    return false;
+  }
 
-  if (!objCartorio.cep) return false;
+  if (!objCartorio.bairro) {
+    console.log('bairro invalido');
+    return false;
+  }
 
-  if (!objCartorio.emailOficial) return false;
+  if (!objCartorio.cep) {
+    console.log('cep invalido');
+    return false;
+  }
 
-  if (!objCartorio.dddTelefone) return false;
+  if (!objCartorio.emailOficial) {
+    console.log('emailOficial invalido');
+    return false;
+  }
 
-  if (!objCartorio.telefone) return false;
+  if (!objCartorio.dddTelefone) {
+    console.log('dddTelefone invalido');
+    return false;
+  }
+
+  if (!objCartorio.telefone) {
+    console.log('telefone invalido');
+    return false;
+  }
+
+  if (!objCartorio.nrBanco) {
+    console.log('nrBanco invalido');
+    return false;
+  }
+
+  if (!objCartorio.favorecido) {
+    console.log('favorecido invalido');
+    return false;
+  }
+
+  if (!objCartorio.nrAgencia) {
+    console.log('nrAgencia invalido');
+    return false;
+  }
+
+  if (!objCartorio.nrContaCorrente) {
+    console.log('nrContaCorrente invalido');
+    return false;
+  }
+
+  if (!objCartorio.nrContaCorrenteDigito) {
+    console.log('nrContaCorrenteDigito invalido');
+    return false;
+  }
+
   return true;
 };
 
 const importaObjParaBD = (objCartorio) => {
+  console.log(objCartorio);
   bdSQL.dbCadastrar(objCartorio)
     .then((response) => {
       console.log(response);

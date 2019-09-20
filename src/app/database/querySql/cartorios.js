@@ -101,4 +101,5 @@ class Cartorios {
     });
   }
 }
+
 module.exports = Cartorios;
