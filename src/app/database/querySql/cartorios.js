@@ -91,12 +91,30 @@ class Cartorios {
 
   static dbbuscaIdCidade(cidade) {
     return new Promise((resolve, reject) => {
-      dataBaseTools.executarQuery(`SELECT ID FROM TBLCIDADES (NOLOCK) WHERE CIDADE LIKE '%${cidade}%'`)
+      dataBaseTools.executarQuery(`SELECT ID FROM TBLCIDADES (NOLOCK) WHERE CIDADE = '${cidade}' AND IDESTADO = 5`)
         .then(({ recordset }) => {
           resolve((recordset[0].ID || null));
         })
         .catch(() => {
           resolve(null);
+        });
+    });
+  }
+
+  static dbCadastrarCidade(objCartorio) {
+    return new Promise((resolve, reject) => {
+      dataBaseTools.executarProcedure('spr_cidade_insert', [
+        { nome: 'IDEstado', tipo: sql.Int, valor: 5 },
+        { nome: 'IDComarca', tipo: sql.Int, valor: 0 },
+        { nome: 'Cidade', tipo: sql.VarChar(100), valor: objCartorio.cidade },
+        { nome: 'blnComarca', tipo: sql.Bit, valor: 1 },
+
+      ])
+        .then(async ({ recordset }) => {
+          resolve(recordset);
+        })
+        .catch((error) => {
+          reject(error);
         });
     });
   }

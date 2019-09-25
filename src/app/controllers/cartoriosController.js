@@ -2,6 +2,7 @@ const lerExcel = require('read-excel-file/node');
 const bdSQL = require('../database/querySql/cartorios');
 
 const cartoriosInvalidos = [];
+const cidadesInvalidas = [];
 
 module.exports = {
   async cadastro(req, res) {
@@ -30,6 +31,33 @@ module.exports = {
       });
     }
   },
+  async cadastroCidade(req, res) {
+    try {
+      const objCartorio = {};
+
+      lerExcel(process.env.ARQUIVO_RAIZ).then(async (cartorios) => {
+        const [primeiro, ...restante] = cartorios;
+
+        for (cartorio of restante) {
+          objCartorio.cidade = await linhaParaObj(cartorio);
+          if (validarObjCidade(objCartorio.cidade)) {
+            importaObjCidadeParaBD(objCartorio.cidade);
+          } else {
+            cidadesInvalidas.push(objCartorio.cidade);
+          }
+        }
+
+        return res.json({ status: 'OK', statusCode: 0, invalidos: cidadesInvalidas });
+      });
+    } catch (err) {
+      console.log('ERRO', err);
+      return res.status(400).json({
+        message:
+          'Erro interno do servidor, por favor, tente novamente mais tarde',
+      });
+    }
+  },
+
 };
 
 const linhaParaObj = async (cartorio) => {
@@ -67,7 +95,7 @@ const linhaParaObj = async (cartorio) => {
     nrAgencia: (cartorio[19] || ''),
     nrAgenciaDigito: cartorio[20] !== null ? cartorio[20] : '',
     nrContaCorrente: (cartorio[21] || ''),
-    nrContaCorrenteDigito: cartorio[22] !== null ? cartorio[22] : '',
+    nrContaCorrenteDigito: (cartorio[22] || ''),
     cobrado: cartorio[23],
     percentual: cartorio[24],
     bsrNrBanco: null,
@@ -106,117 +134,108 @@ const linhaParaObj = async (cartorio) => {
 
 const validarObj = (objCartorio) => {
   if (!objCartorio.estado) {
-    console.log('Estado Invalido');
     return false;
   }
   // Adicionar validações quanto aos tipagens de cada coluna correspondente das tabelas.
 
   if (!objCartorio.comarca) {
-    console.log('comarca invalido');
     return false;
   }
 
   if (!objCartorio.cidade) {
-    console.log('cidade invalida');
     return false;
   }
 
   if (!objCartorio.razao) {
-    console.log('razao invalido');
     return false;
   }
 
   if (!objCartorio.cnpj) {
-    console.log('cnpj invalido');
     return false;
   }
 
   if (!objCartorio.nomeOficial) {
-    console.log('NomeOficial invalido');
     return false;
   }
 
   if (!objCartorio.cns) {
-    console.log('cns invalido');
     return false;
   }
 
   if (!objCartorio.via) {
-    console.log('via invalido');
     return false;
   }
 
   if (!objCartorio.logradouro) {
-    console.log('logradouro invalido');
     return false;
   }
 
   if (!objCartorio.numero) {
-    console.log('numero invalido');
     return false;
   }
 
   if (!objCartorio.bairro) {
-    console.log('bairro invalido');
     return false;
   }
 
   if (!objCartorio.cep) {
-    console.log('cep invalido');
     return false;
   }
 
   if (!objCartorio.emailOficial) {
-    console.log('emailOficial invalido');
     return false;
   }
 
   if (!objCartorio.dddTelefone) {
-    console.log('dddTelefone invalido');
     return false;
   }
 
   if (!objCartorio.telefone) {
-    console.log('telefone invalido');
     return false;
   }
 
   if (!objCartorio.nrBanco) {
-    console.log('nrBanco invalido');
     return false;
   }
 
   if (!objCartorio.favorecido) {
-    console.log('favorecido invalido');
     return false;
   }
 
   if (!objCartorio.nrAgencia) {
-    console.log('nrAgencia invalido');
     return false;
   }
 
   if (!objCartorio.nrContaCorrente) {
-    console.log('nrContaCorrente invalido');
     return false;
   }
+  return true;
+};
 
-  if (!objCartorio.nrContaCorrenteDigito) {
-    console.log('nrContaCorrenteDigito invalido');
+const validarObjCidade = (objCartorio) => {
+  if (!objCartorio.cidade) {
     return false;
   }
-
   return true;
 };
 
 const importaObjParaBD = (objCartorio) => {
-  console.log(objCartorio);
   bdSQL.dbCadastrar(objCartorio)
     .then((response) => {
       console.log(response);
     })
     .catch((error) => {
       cartoriosInvalidos.push(objCartorio);
+      console.log(error);
+    });
+};
+const importaObjCidadeParaBD = (objCartorio) => {
+  bdSQL.dbCadastrarCidade(objCartorio)
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((error) => {
+      cidadesInvalidas.push(objCartorio);
       console.log(error);
     });
 };
