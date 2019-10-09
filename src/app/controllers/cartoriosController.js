@@ -1,11 +1,14 @@
 const lerExcel = require('read-excel-file/node');
 const bdSQL = require('../database/querySql/cartorios');
 
-const cartoriosInvalidos = [];
-const cidadesInvalidas = [];
+let cartoriosInvalidos = [];
+let cidadesInvalidas = [];
+let errosDepartamento = [];
 
 module.exports = {
   async cadastro(req, res) {
+    const {idEstado} = req.params;
+    limparRegistros();
     try {
       let objCartorio = {};
 
@@ -13,15 +16,14 @@ module.exports = {
         const [primeiro, ...restante] = cartorios;
 
         for (cartorio of restante) {
-          objCartorio = await linhaParaObj(cartorio);
-          if (validarObj(objCartorio)) {
-            importaObjParaBD(objCartorio);
+          objCartorio = await _linhaParaObj(cartorio, idEstado);
+          if (_validarObj(objCartorio)) {
+            _importaObjParaBD(objCartorio);
           } else {
             cartoriosInvalidos.push(objCartorio);
           }
         }
-
-        return res.json({ status: 'OK', statusCode: 0, invalidos: cartoriosInvalidos });
+        return res.json({ status: 'OK', statusCode: 0, invalidos: cartoriosInvalidos, errosDepartamento });
       });
     } catch (err) {
       console.log('ERRO', err);
@@ -32,6 +34,8 @@ module.exports = {
     }
   },
   async cadastroCidade(req, res) {
+    const {idEstado} = req.params;
+    limparRegistros();
     try {
       const objCartorio = {};
 
@@ -39,9 +43,9 @@ module.exports = {
         const [primeiro, ...restante] = cartorios;
 
         for (cartorio of restante) {
-          objCartorio.cidade = await linhaParaObj(cartorio);
-          if (validarObjCidade(objCartorio.cidade)) {
-            importaObjCidadeParaBD(objCartorio.cidade);
+          objCartorio.cidade = await _linhaParaObj(cartorio);
+          if (_validarObjCidade(objCartorio.cidade)) {
+            _importaObjCidadeParaBD(objCartorio.cidade, idEstado);
           } else {
             cidadesInvalidas.push(objCartorio.cidade);
           }
@@ -57,12 +61,71 @@ module.exports = {
       });
     }
   },
+  async cadastroDepartamento(req, res){
+    limparRegistros();
+    try {
+      for (cartorio of req.body) {
+        if (_validarObj(cartorio)) {
+          _importaDepartamentoParaBD (cartorio,cartorio.IDInstituicao)
+        } else {
+          cartoriosInvalidos.push(cartorio);
+        }
+      }
+      return res.json({ status: 'OK', statusCode: 0, invalidos: cartoriosInvalidos, errosDepartamento });
+    } catch (err) {
+      console.log('ERRO', err);
+      return res.status(400).json({
+        message:
+          'Erro interno do servidor, por favor, tente novamente mais tarde',
+      });
+    }
+  },
+  async Dep2(req, res) {
+    const {idEstado} = req.params;
+    const dep  = [];
 
+    limparRegistros();
+    try {
+      let objCartorio = {};
+      lerExcel(process.env.ARQUIVO_RAIZ).then(async (cartorios) => {
+        const [primeiro, ...restante] = cartorios;
+
+        for (cartorio of restante) {
+          objCartorio = await _linhaParaObj(cartorio, idEstado);
+          bdSQL.dbbuscaIDInstituicao(objCartorio).then((IDInstituicao)=>{
+            dep.push({...objCartorio, IDInstituicao });
+          })
+        }
+
+        for (cartorio of dep) {
+          if (_validarObj(cartorio)) {
+            _importaDepartamentoParaBD (cartorio,cartorio.IDInstituicao)
+          } else {
+            cartoriosInvalidos.push(cartorio);
+          }
+        }
+
+        return res.json({ status: 'OK', statusCode: 0, invalidos: cartoriosInvalidos, errosDepartamento });
+      });
+    } catch (err) {
+      console.log('ERRO', err);
+      return res.status(400).json({
+        message:
+          'Erro interno do servidor, por favor, tente novamente mais tarde',
+      });
+    }
+  }
 };
 
-const linhaParaObj = async (cartorio) => {
+const limparRegistros=()=>{
+  cartoriosInvalidos = [];
+  cidadesInvalidas = [];
+  errosDepartamento = [];
+};
+
+const _linhaParaObj = async (cartorio, idEstado) => {
   const IDvia = await bdSQL.dbbuscaIdVia(cartorio[8]);
-  const IDcidade = await bdSQL.dbbuscaIdCidade(cartorio[2]);
+  const IDcidade = await bdSQL.dbbuscaIdCidade(cartorio[2], idEstado);
 
   return ({
     estado: cartorio[0],
@@ -71,16 +134,16 @@ const linhaParaObj = async (cartorio) => {
     cidade: cartorio[2],
     nCartorio: cartorio[3],
     razao: cartorio[4],
-    cnpj: cartorio[5],
-    nomeOficial: cartorio[6],
-    cns: cartorio[7],
+    cns: cartorio[5],
+    cnpj: cartorio[6],
+    nomeOficial: cartorio[7],
     ipCartorio: null,
     IDvia,
     observacoes: null,
     horariofunc: null,
     via: cartorio[8],
     logradouro: cartorio[9],
-    numero: cartorio[10] !== null ? cartorio[10] : 'S/N',
+    numero: cartorio[10] === '0' ? cartorio[10] : ' ',
     complemento: cartorio[11],
     bairro: cartorio[12],
     cep: cartorio[13],
@@ -128,62 +191,62 @@ const linhaParaObj = async (cartorio) => {
     blnDesativado: 1,
     blnBDL: null,
     blnParticipaPP: false,
-    blnPECCertidaoDigital: false,
+    blnPECCertidaoDigital: false
   });
 };
 
-const validarObj = (objCartorio) => {
+const _validarObj = (objCartorio) => {
   if (!objCartorio.estado) {
     return false;
   }
   // Adicionar validações quanto aos tipagens de cada coluna correspondente das tabelas.
 
   if (!objCartorio.comarca) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.cidade) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.razao) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.cnpj) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.nomeOficial) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.cns) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.via) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.logradouro) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.numero) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.bairro) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.cep) {
-    return false;
+     return false;
   }
 
   if (!objCartorio.emailOficial) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.dddTelefone) {
@@ -191,7 +254,7 @@ const validarObj = (objCartorio) => {
   }
 
   if (!objCartorio.telefone) {
-    return false;
+     return false;
   }
 
   if (!objCartorio.nrBanco) {
@@ -199,43 +262,44 @@ const validarObj = (objCartorio) => {
   }
 
   if (!objCartorio.favorecido) {
-    return false;
+      return false;
   }
 
   if (!objCartorio.nrAgencia) {
-    return false;
+       return false;
   }
 
-  if (!objCartorio.nrContaCorrente) {
-    return false;
-  }
   return true;
 };
 
-const validarObjCidade = (objCartorio) => {
+const _validarObjCidade = (objCartorio) => {
   if (!objCartorio.cidade) {
     return false;
   }
   return true;
 };
 
-const importaObjParaBD = (objCartorio) => {
-  bdSQL.dbCadastrar(objCartorio)
-    .then((response) => {
-      console.log(response);
+const _importaObjParaBD = (objCartorio) => {
+  bdSQL.dbCadastrarCartorio(objCartorio)
+    .then((resCartorio) => {
+      _importaDepartamentoParaBD(objCartorio,resCartorio[0].ID)
     })
     .catch((error) => {
       cartoriosInvalidos.push(objCartorio);
       console.log(error);
     });
 };
-const importaObjCidadeParaBD = (objCartorio) => {
-  bdSQL.dbCadastrarCidade(objCartorio)
-    .then((response) => {
-      console.log(response);
-    })
+const _importaObjCidadeParaBD = (objCartorio,idEstado) => {
+  bdSQL.dbCadastrarCidade(objCartorio, idEstado)
     .catch((error) => {
       cidadesInvalidas.push(objCartorio);
+      console.log(error);
+    });
+};
+const _importaDepartamentoParaBD = (objCartorio,IDInstituicao) => {
+  bdSQL.dbCadastrarDepartamento(objCartorio, IDInstituicao)
+    .catch((error) => {
+      errosDepartamento.push({...objCartorio, IDInstituicao});
       console.log(error);
     });
 };
