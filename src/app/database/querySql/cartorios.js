@@ -2,7 +2,7 @@ const sql = require('mssql');
 const dataBaseTools = require('../dataBaseTools');
 
 class Cartorios {
-  static dbCadastrar(objCartorio) {
+  static dbCadastrarCartorio(objCartorio) {
     return new Promise((resolve, reject) => {
       dataBaseTools.executarProcedure('stpCartorios', [
         { nome: 'intOperacao', tipo: sql.Int, valor: 2 },
@@ -89,9 +89,9 @@ class Cartorios {
     });
   }
 
-  static dbbuscaIdCidade(cidade) {
+  static dbbuscaIdCidade(cidade, idEstado) {
     return new Promise((resolve, reject) => {
-      dataBaseTools.executarQuery(`SELECT ID FROM TBLCIDADES (NOLOCK) WHERE CIDADE = '${cidade}' AND IDESTADO = 5`)
+      dataBaseTools.executarQuery(`SELECT ID FROM TBLCIDADES (NOLOCK) WHERE CIDADE = '${cidade}' AND IDESTADO = ${idEstado}`)
         .then(({ recordset }) => {
           resolve((recordset[0].ID || null));
         })
@@ -101,10 +101,10 @@ class Cartorios {
     });
   }
 
-  static dbCadastrarCidade(objCartorio) {
+  static dbCadastrarCidade(objCartorio, idEstado) {
     return new Promise((resolve, reject) => {
       dataBaseTools.executarProcedure('spr_cidade_insert', [
-        { nome: 'IDEstado', tipo: sql.Int, valor: 5 },
+        { nome: 'IDEstado', tipo: sql.Int, valor: idEstado },
         { nome: 'IDComarca', tipo: sql.Int, valor: 0 },
         { nome: 'Cidade', tipo: sql.VarChar(100), valor: objCartorio.cidade },
         { nome: 'blnComarca', tipo: sql.Bit, valor: 1 },
@@ -118,6 +118,140 @@ class Cartorios {
         });
     });
   }
+
+  static dbCadastrarDepartamento(objCartorio, IDInstituicao = null) {
+    return new Promise((resolve, reject) => {
+      dataBaseTools.executarProcedure('stpDepartamentos', [
+
+        { nome: 'intOperacao', tipo: sql.Int, valor: 1 },
+        { nome: 'intIDDepartamento', tipo: sql.Int, valor: null },
+        { nome: 'intIDInstituicao', tipo: sql.Int, valor: IDInstituicao },
+        { nome: 'intIDCidade', tipo: sql.Int, valor: objCartorio.IDcidade },
+        { nome: 'intIDVia', tipo: sql.Int, valor: objCartorio.IDvia },
+        { nome: 'intIDTipo', tipo: sql.Int, valor: null },
+        { nome: 'strDepartamento', tipo: sql.VarChar(100), valor: objCartorio.razao },
+        { nome: 'strLogradouro', tipo: sql.VarChar(50), valor: objCartorio.logradouro },
+        { nome: 'strNumero', tipo: sql.VarChar(6), valor: objCartorio.numero },
+        { nome: 'strComplemento', tipo: sql.VarChar(20), valor: objCartorio.complemento },
+        { nome: 'strBairro', tipo: sql.VarChar(50), valor: objCartorio.bairro },
+        { nome: 'strCep', tipo: sql.VarChar(10), valor: objCartorio.cep },
+        { nome: 'strDDDTelefone', tipo: sql.VarChar(50), valor: objCartorio.dddTelefone },
+        { nome: 'strDDDFax', tipo: sql.VarChar(50), valor: objCartorio.dddfax },
+        { nome: 'strTelefone', tipo: sql.VarChar(50), valor: objCartorio.telefone },
+        { nome: 'strFax', tipo: sql.VarChar(50), valor: objCartorio.fax },
+        { nome: 'strSite', tipo: sql.VarChar(50), valor: objCartorio.site },
+        { nome: 'strEmail', tipo: sql.VarChar(100), valor: objCartorio.emailOficial },
+        { nome: 'strObservacoes', tipo: sql.Text, valor: objCartorio.observacoes },
+        { nome: 'HoraFunc', tipo: sql.VarChar(200), valor: null },
+        { nome: 'blnDesativado', tipo: sql.Bit, valor: null },
+        { nome: 'strInstituicao', tipo: sql.VarChar(100), valor: null },
+        { nome: 'strCNPJ', tipo: sql.VarChar(14), valor: null },
+        { nome: 'InscMunicipal', tipo: sql.VarChar(30), valor: '' },
+        { nome: 'NumeroConvenio', tipo: sql.VarChar(50), valor: '' },
+        { nome: 'strEmailFinanceiro', tipo: sql.VarChar(150), valor: objCartorio.emailOficial },
+
+      ])
+        .then(async ({ recordset }) => {
+          resolve(recordset);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+  static dbbuscaIDInstituicao({cnpj}) {
+    return new Promise((resolve, reject) => {
+      dataBaseTools.executarQuery(`SELECT * FROM TBLInstituicoes (NOLOCK) WHERE CNPJ ='${cnpj}'`)
+        .then(({ recordset }) => {
+          resolve((recordset[0].ID || null));
+        })
+        .catch(() => {
+          resolve(null);
+        });
+    });
+  }
+
+/*   static dbListarDepartamento(objCartorio) {
+    return new Promise((resolve, reject) => {
+      dataBaseTools.executarProcedure('stpDepartamentos', [
+
+        { nome: 'intOperacao', tipo: sql.Int, valor: 5 },
+        { nome: 'intIDDepartamento', tipo: sql.Int, valor: null },
+        { nome: 'intIDInstituicao', tipo: sql.Int, valor: null },
+        { nome: 'intIDCidade', tipo: sql.Int, valor: objCartorio.cidade },
+        { nome: 'intIDVia', tipo: sql.Int, valor: objCartorio.via },
+        { nome: 'intIDTipo', tipo: sql.Int, valor: null },
+        { nome: 'strDepartamento', tipo: sql.VarChar(100), valor: objCartorio.razao },
+        { nome: 'strLogradouro', tipo: sql.VarChar(50), valor: objCartorio.logradouro },
+        { nome: 'strNumero', tipo: sql.VarChar(6), valor: objCartorio.numero },
+        { nome: 'strComplemento', tipo: sql.VarChar(20), valor: objCartorio.complemento },
+        { nome: 'strBairro', tipo: sql.VarChar(50), valor: objCartorio.bairro },
+        { nome: 'strCep', tipo: sql.VarChar(10), valor: objCartorio.cep },
+        { nome: 'strDDDTelefone', tipo: sql.VarChar(50), valor: objCartorio.dddTelefone },
+        { nome: 'strDDDFax', tipo: sql.VarChar(50), valor: objCartorio.dddfax },
+        { nome: 'strTelefone', tipo: sql.VarChar(50), valor: objCartorio.telefone },
+        { nome: 'strFax', tipo: sql.VarChar(50), valor: objCartorio.fax },
+        { nome: 'strSite', tipo: sql.VarChar(50), valor: objCartorio.site },
+        { nome: 'strEmail', tipo: sql.VarChar(100), valor: objCartorio.emailOficial },
+        { nome: 'strObservacoes', tipo: sql.Text, valor: objCartorio.observacoes },
+        { nome: 'HoraFunc', tipo: sql.VarChar(200), valor: null },
+        { nome: 'blnDesativado', tipo: sql.Bit, valor: null },
+        { nome: 'strInstituicao', tipo: sql.VarChar(100), valor: null },
+        { nome: 'strCNPJ', tipo: sql.VarChar(14), valor: null },
+        { nome: 'InscMunicipal', tipo: sql.VarChar(30), valor: '' },
+        { nome: 'NumeroConvenio', tipo: sql.VarChar(50), valor: '' },
+        { nome: 'strEmailFinanceiro', tipo: sql.VarChar(150), valor: objCartorio.emailOficial },
+
+      ])
+        .then(async ({ recordset }) => {
+          resolve(recordset);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  static dbUpDateDepartamento(objCartorio) {
+    return new Promise((resolve, reject) => {
+      dataBaseTools.executarProcedure('stpDepartamentos', [
+
+        { nome: 'intOperacao', tipo: sql.Int, valor: 6 },
+        { nome: 'intIDDepartamento', tipo: sql.Int, valor: null },
+        { nome: 'intIDInstituicao', tipo: sql.Int, valor: null },
+        { nome: 'intIDCidade', tipo: sql.Int, valor: objCartorio.cidade },
+        { nome: 'intIDVia', tipo: sql.Int, valor: objCartorio.via },
+        { nome: 'intIDTipo', tipo: sql.Int, valor: null },
+        { nome: 'strDepartamento', tipo: sql.VarChar(100), valor: objCartorio.razao },
+        { nome: 'strLogradouro', tipo: sql.VarChar(50), valor: objCartorio.logradouro },
+        { nome: 'strNumero', tipo: sql.VarChar(6), valor: objCartorio.numero },
+        { nome: 'strComplemento', tipo: sql.VarChar(20), valor: objCartorio.complemento },
+        { nome: 'strBairro', tipo: sql.VarChar(50), valor: objCartorio.bairro },
+        { nome: 'strCep', tipo: sql.VarChar(10), valor: objCartorio.cep },
+        { nome: 'strDDDTelefone', tipo: sql.VarChar(50), valor: objCartorio.dddTelefone },
+        { nome: 'strDDDFax', tipo: sql.VarChar(50), valor: objCartorio.dddfax },
+        { nome: 'strTelefone', tipo: sql.VarChar(50), valor: objCartorio.telefone },
+        { nome: 'strFax', tipo: sql.VarChar(50), valor: objCartorio.fax },
+        { nome: 'strSite', tipo: sql.VarChar(50), valor: objCartorio.site },
+        { nome: 'strEmail', tipo: sql.VarChar(100), valor: objCartorio.emailOficial },
+        { nome: 'strObservacoes', tipo: sql.Text, valor: objCartorio.observacoes },
+        { nome: 'HoraFunc', tipo: sql.VarChar(200), valor: null },
+        { nome: 'blnDesativado', tipo: sql.Bit, valor: null },
+        { nome: 'strInstituicao', tipo: sql.VarChar(100), valor: null },
+        { nome: 'strCNPJ', tipo: sql.VarChar(14), valor: null },
+        { nome: 'InscMunicipal', tipo: sql.VarChar(30), valor: '' },
+        { nome: 'NumeroConvenio', tipo: sql.VarChar(50), valor: '' },
+        { nome: 'strEmailFinanceiro', tipo: sql.VarChar(150), valor: objCartorio.emailOficial },
+
+      ])
+        .then(async ({ recordset }) => {
+          resolve(recordset);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  } */
 }
 
 module.exports = Cartorios;
