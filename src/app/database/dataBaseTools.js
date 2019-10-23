@@ -2,19 +2,31 @@ const sql = require('mssql');
 
 class DataBase {
   constructor() {
-    this.config = process.env.NODE_ENV === 'production'
-      ? {
-        user: process.env.U_P,
-        password: process.env.PW_P,
-        server: process.env.SERVER_P,
-        database: process.env.DB_P,
-      }
-      : {
-        user: process.env.U_H,
-        password: process.env.PW_H,
-        server: process.env.SERVER_H,
-        database: process.env.DB_H,
-      };
+    switch(process.env.AMBIENTE){
+      case 'prod':
+        this.config = {
+          user: process.env.U_P,
+          password: process.env.PW_P,
+          server: process.env.SERVER_P,
+          database: process.env.DB_P,
+        };
+        break;
+      case 'pre':
+        this.config = {
+          user: process.env.U_PP,
+          password: process.env.PW_PP,
+          server: process.env.SERVER_PP,
+          database: process.env.DB_PP,
+        };
+        break;
+      default:
+        this.config = {
+          user: process.env.U_H,
+          password: process.env.PW_H,
+          server: process.env.SERVER_H,
+          database: process.env.DB_H,
+        };
+    }
   }
 
   static mudaErroParaObjetoJS({ originalError: { info: { number, message } } }) {

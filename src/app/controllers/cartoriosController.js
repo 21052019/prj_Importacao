@@ -35,6 +35,7 @@ module.exports = {
   },
   async cadastroCidade(req, res) {
     const {idEstado} = req.params;
+
     limparRegistros();
     try {
       const objCartorio = {};
@@ -134,9 +135,9 @@ const _linhaParaObj = async (cartorio, idEstado) => {
     cidade: cartorio[2],
     nCartorio: cartorio[3],
     razao: cartorio[4],
-    cns: cartorio[5],
-    cnpj: cartorio[6],
-    nomeOficial: cartorio[7],
+    cnpj: cartorio[5],
+    nomeOficial: cartorio[6],
+    cns: cartorio[7],
     ipCartorio: null,
     IDvia,
     observacoes: null,

@@ -9,7 +9,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^8.1.0",
-    "dotenv-safe": "^8.1.0",
     "express": "^4.17.1",
     "mssql": "^5.1.0",
     "read-excel-file": "^4.0.2",
